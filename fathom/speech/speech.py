@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import absolute_import, print_function, division
+from builtins import range
 
 import numpy as np
 import tensorflow as tf
@@ -10,8 +12,8 @@ from tensorflow.contrib.rnn.python.ops.rnn_cell import _linear
 
 from fathom.nn import NeuralNetworkModel, default_runstep
 
-from preproc import load_timit, timit_hdf5_filepath
-from phoneme import index2phoneme_dict
+from .preproc import load_timit, timit_hdf5_filepath
+from .phoneme import index2phoneme_dict
 
 
 def clipped_relu(inputs, clip=20):
@@ -222,8 +224,8 @@ class Speech(NeuralNetworkModel):
     self.load_data()
 
     with self.G.as_default():
-      print 'Starting run...'
-      for _ in xrange(n_steps):
+      print('Starting run...')
+      for _ in range(n_steps):
         spectrogram_batch, label_batch, seq_len_batch = self.get_random_batch()
 
         if not self.forward_only:

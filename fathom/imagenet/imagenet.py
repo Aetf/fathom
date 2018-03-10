@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import absolute_import, print_function, division
 
 import tensorflow as tf
 
@@ -124,7 +125,7 @@ class ImagenetModel(NeuralNetworkModel):
           )
 
           if step % self.display_step == 0:
-            print "Iter " + str(step*self.batch_size) + ", Minibatch Loss= " + "{:.6f}".format(loss_value) + ", Training Accuracy= " + "{:.5f}".format(acc)
+            print("Iter " + str(step*self.batch_size) + ", Minibatch Loss= " + "{:.6f}".format(loss_value) + ", Training Accuracy= " + "{:.5f}".format(acc))
         else:
           _ = runstep(
               self.session,

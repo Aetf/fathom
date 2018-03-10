@@ -1,13 +1,15 @@
 #!/usr/bin/env python
-
 """Dominique Luna's implementation of End-to-End Memory Networks, refactored."""
+from __future__ import absolute_import, print_function, division
 
 from itertools import chain
+from functools import reduce
 import tensorflow as tf
 import numpy as np
 from sklearn import cross_validation
+
 from fathom.nn import NeuralNetworkModel, default_runstep
-from data_utils import load_task, vectorize_data
+from .data_utils import load_task, vectorize_data
 
 data_dir = "/data/babi/tasks_1-20_v1-2/en/"
 task_id = 1

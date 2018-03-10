@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import absolute_import, print_function, division
+from builtins import range
 
 from math import sqrt
 import numpy as np
@@ -75,7 +77,7 @@ class AutoencBase(NeuralNetworkModel):
       if self.forward_only:
         self.epochs = 1
 
-      for epoch in xrange(self.epochs):
+      for epoch in range(self.epochs):
         # TODO: re-enable options and metadata, which slow down the run
 
         total_batch = self.mnist.train.num_examples // self.batch_size

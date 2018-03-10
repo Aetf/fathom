@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-
 """
 Python representation of 61 TIMIT phonemes from DOC/PHONCODE.DOC.
 """
+from __future__ import absolute_import, print_function, division
 
 # list of 61 TIMIT phonemes from phoncode.doc
 timit_phonemes = [

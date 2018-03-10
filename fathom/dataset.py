@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import absolute_import, print_function, division
 
 import os
 import tensorflow as tf
@@ -24,4 +25,3 @@ class Dataset(object):
 
   def reader(self):
     return tf.TFRecordReader()
-

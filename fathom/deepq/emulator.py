@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, division
+
 # NOTE: Tejas Kulkarni's implementation
 import os.path
 import numpy as np
@@ -16,7 +18,7 @@ class emulator(object):
     self.ale.setInt("frame_skip",frameskip)
     romfile = str(ROM_PATH)+str(rom_name)
     if not os.path.exists(romfile):
-      print 'No ROM file found at "'+romfile+'".\nAdjust ROM_PATH or double-check the filt exists.'
+      print('No ROM file found at "'+romfile+'".\nAdjust ROM_PATH or double-check the filt exists.')
     self.ale.loadROM(romfile)
     self.legal_actions = self.ale.getMinimalActionSet()
     self.action_map = dict()
@@ -26,7 +28,7 @@ class emulator(object):
 
     # print(self.legal_actions)
     self.screen_width,self.screen_height = self.ale.getScreenDims()
-    print("width/height: " +str(self.screen_width) + "/" + str(self.screen_height))
+    print("width/height: " + str(self.screen_width) + "/" + str(self.screen_height))
     self.vis = vis
     if vis:
       cv2.startWindowThread()

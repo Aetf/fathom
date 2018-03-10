@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+from __future__ import absolute_import, print_function, division
+from future import with_metaclass
 
 import tensorflow as tf
 from abc import ABCMeta, abstractmethod, abstractproperty
 
-class GenericModel(object):
-  __metaclass__ = ABCMeta
+class GenericModel(with_metaclass(ABCMeta, object)):
   def __init__(self, device=None, init_options=None):
     self.device=device
 
@@ -27,8 +28,7 @@ def default_runstep(session, sink_ops, *options, **kw_options):
   return session.run(sink_ops, *options, **kw_options)
 
 
-class NeuralNetworkModel(GenericModel):
-  __metaclass__ = ABCMeta
+class NeuralNetworkModel(with_metaclass(ABCMeta, GenericModel)):
   forward_only = False
 
   def __init__(self, device=None, init_options=None):

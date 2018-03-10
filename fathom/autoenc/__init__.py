@@ -1,1 +1,3 @@
-from variational import Autoenc, AutoencFwd
+from __future__ import absolute_import, print_function, division
+
+from .variational import Autoenc, AutoencFwd

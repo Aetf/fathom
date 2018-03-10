@@ -6,14 +6,14 @@ _VERSION = '1.0-rc0'
 
 # TODO: Add version numbers.
 REQUIRED_PACKAGES = [
-  'scipy',
-  'tensorflow >= 1.0.0',
-  'scikit-learn',
-  'librosa', # audio preprocessing
-  'h5py'
+    'scipy',
+    'tensorflow >= 1.0.0',
+    'scikit-learn',
+    'librosa',  # audio preprocessing
+    'h5py'
 ]
 
-setup(name='Fathom-Workloads', # "fathom" is already taken on PyPI
+setup(name='Fathom-Workloads',  # "fathom" is already taken on PyPI
       description='Reference workloads for modern deep learning',
       url='http://github.com/rdadolf/fathom',
 
@@ -23,37 +23,36 @@ setup(name='Fathom-Workloads', # "fathom" is already taken on PyPI
       # PyPI does not have an easy way to specify multiple authors.
       author="Saketh Rama",
       author_email="rama@seas.harvard.edu",
-      
+
       # We don't use __file__, but mark False to be safe.
       zip_safe=False,
 
       classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Developers',
-        'Intended Audience :: Education',
-        'Intended Audience :: Science/Research',
-        'Programming Language :: Python :: 2.7',
+          'Development Status :: 4 - Beta',
+          'Intended Audience :: Developers',
+          'Intended Audience :: Education',
+          'Intended Audience :: Science/Research',
+          'Programming Language :: Python :: 2.7',
 
-        'Topic :: Scientific/Engineering :: Artificial Intelligence',
-        'Topic :: Scientific/Engineering :: Image Recognition',
-        'Topic :: System :: Hardware',
+          'Topic :: Scientific/Engineering :: Artificial Intelligence',
+          'Topic :: Scientific/Engineering :: Image Recognition',
+          'Topic :: System :: Hardware',
       ],
 
-      packages=find_packages(), # find packages in subdirectories
+      packages=find_packages(),  # find packages in subdirectories
 
       package_data={'fathom': [
-        'fathom.png',
+          'fathom.png',
 
-        'Dockerfile',
-        'pylintrc',
+          'Dockerfile',
+          'pylintrc',
 
-        'README.md',
-        'mkdocs.yml',
+          'README.md',
+          'mkdocs.yml',
 
-        'runtest.sh',
+          'runtest.sh',
 
-        'setup.cfg',
+          'setup.cfg',
       ]},
       include_package_data=True,
-)
-
+      )

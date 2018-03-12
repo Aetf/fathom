@@ -23,10 +23,11 @@ Fathom needs several other python as well, mostly for pre-processing inputs. For
 
 You'll want to install the following list of packages. (You may have several of them installed already, and you shouldn't need to re-install&mdash;Fathom doesn't use any fancy features).
 
+ - requests (for downloading)
+ - future (for python 2 & 3 compatibility)
  - numpy (most)
  - scipy (for scikit-learn)
  - scikit-learn ([MemNet](/models/#memnet), [Speech](/models/#speech), [Autoenc](/models/#autoenc))
- - six ([Seq2Seq](/models/#seq2seq))
  - librosa ([Speech](/models/#speech))
  <!-- - tqdm ([Speech](/models/#speech)) -->
  - h5py* ([Speech](/models/#speech))

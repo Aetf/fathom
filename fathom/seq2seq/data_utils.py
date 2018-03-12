@@ -20,8 +20,8 @@ import gzip
 import os
 import re
 import tarfile
-
-from six.moves import urllib
+import requests
+import shutil
 
 from tensorflow.python.platform import gfile
 
@@ -46,6 +46,14 @@ _WMT_ENFR_TRAIN_URL = "http://www.statmt.org/wmt10/training-giga-fren.tar"
 _WMT_ENFR_DEV_URL = "http://www.statmt.org/wmt15/dev-v2.tgz"
 
 
+def download_file(url, local_filename):
+    with requests.get(url, stream=True) as r:
+        with open(local_filename, 'wb') as f:
+            shutil.copyfileobj(r.raw, f)
+
+    return local_filename
+
+
 def maybe_download(directory, filename, url):
     """Download filename from url unless it's already in directory."""
     if not os.path.exists(directory):
@@ -54,7 +62,7 @@ def maybe_download(directory, filename, url):
     filepath = os.path.join(directory, filename)
     if not os.path.exists(filepath):
         print("Downloading %s to %s" % (url, filepath))
-        filepath, _ = urllib.request.urlretrieve(url, filepath)
+        filepath = download_file(url, filepath)
         statinfo = os.stat(filepath)
         print("Succesfully downloaded", filename, statinfo.st_size, "bytes")
     return filepath

@@ -10,11 +10,18 @@ from builtins import range
 
 import gzip
 import os
-import urllib.request
-import urllib.parse
-import urllib.error
+import requests
+import shutil
 import numpy
 SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
+
+
+def download_file(url, local_filename):
+    with requests.get(url, stream=True) as r:
+        with open(local_filename, 'wb') as f:
+            shutil.copyfileobj(r.raw, f)
+
+    return local_filename
 
 
 def maybe_download(filename, work_directory):
@@ -23,7 +30,7 @@ def maybe_download(filename, work_directory):
         os.mkdir(work_directory)
     filepath = os.path.join(work_directory, filename)
     if not os.path.exists(filepath):
-        filepath, _ = urllib.request.urlretrieve(SOURCE_URL + filename, filepath)
+        filepath = download_file(SOURCE_URL + filename, filepath)
         statinfo = os.stat(filepath)
         print('Succesfully downloaded', filename, statinfo.st_size, 'bytes.')
     return filepath

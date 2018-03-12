@@ -5,7 +5,7 @@ from builtins import range
 import numpy as np
 import tensorflow as tf
 
-#from tensorflow.models.rnn import rnn, rnn_cell
+# from tensorflow.models.rnn import rnn, rnn_cell
 from tensorflow.python.ops import functional_ops
 from tensorflow.python.ops import variable_scope as vs
 from tensorflow.contrib.rnn.python.ops.rnn_cell import _linear
@@ -50,7 +50,6 @@ class Speech(NeuralNetworkModel):
     def __init__(self, device=None, init_options=None):
         super(Speech, self).__init__(device=device, init_options=init_options)
 
-    # def inference(self, inputs, n_hidden=2048):
     def build_inference(self, inputs, n_hidden=1024):
         with self.G.as_default():
             self.n_hidden = n_hidden
@@ -61,7 +60,8 @@ class Speech(NeuralNetworkModel):
             outputs_3 = self.mlp_layer(outputs_2, self.n_hidden, self.n_hidden)
             outputs_4 = self.bidirectional_layer(outputs_3, n_input=self.n_hidden,
                                                  n_hidden=self.n_hidden, n_output=self.n_hidden)
-            outputs_5 = self.mlp_layer(outputs_3, self.n_hidden, self.n_labels)
+            # FIXME: Fix RNN layer's output according to mozilla's deepspeech
+            outputs_5 = self.mlp_layer(outputs_4, self.n_hidden, self.n_labels)
 
             self._outputs = outputs_5
 

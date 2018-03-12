@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, print_function, division
-from future import with_metaclass
+from future.utils import with_metaclass
 
 import tensorflow as tf
 from abc import ABCMeta, abstractmethod, abstractproperty

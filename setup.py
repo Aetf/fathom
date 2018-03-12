@@ -4,20 +4,23 @@ from setuptools import find_packages, setup
 # But we normalize below manually anyway.
 _VERSION = '1.0-rc0'
 
-# TODO: Add version numbers.
-REQUIRED_PACKAGES = [
-    'scipy',
-    'tensorflow >= 1.0.0',
-    'scikit-learn',
-    'librosa',  # audio preprocessing
-    'h5py'
-]
 
 setup(name='Fathom-Workloads',  # "fathom" is already taken on PyPI
       description='Reference workloads for modern deep learning',
       url='http://github.com/rdadolf/fathom',
 
       version=_VERSION.replace('-', ''),
+      # TODO: Add version numbers.
+      install_requires=[
+          'tensorflow>=1.0.0',
+          'numpy',
+          'scipy',
+          'scikit-learn',
+          'librosa',  # audio preprocessing
+          'h5py',
+          'future',  # python 2 & 3 compatibility
+          'requests'  # dataset downloading
+      ],
 
       # Authors: Robert Adolf, Saketh Rama, and Brandon Reagen
       # PyPI does not have an easy way to specify multiple authors.

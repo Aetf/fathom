@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from __future__ import absolute_import, print_function, division
 
 import tensorflow as tf
@@ -14,11 +13,22 @@ imagenet_record_dir = '/data/ILSVRC2012/imagenet-tfrecord/'
 class Imagenet(Dataset):
     """Design from TensorFlow Inception example."""
 
-    def __init__(self, subset, record_dir=imagenet_record_dir):
-        super(Imagenet, self).__init__(subset, record_dir)
+    def __init__(self, subset, record_dir=imagenet_record_dir, synthesized=False):
+        if synthesized:
+            record_dir = None
+        super(Imagenet, self).__init__(subset, record_dir, synthesized)
 
     def num_classes(self):
         return 1000
+
+    def synthesize_sample(self, sample_dim):
+        # check if is synthesized
+        super(Imagenet, self).synthesize_sample(sample_dim)
+
+        image = tf.Variable(tf.random_normal(sample_dim, dtype=tf.float32), name='sample_image', trainable=False)
+        label = tf.Variable(tf.random_uniform([1], minval=0, maxval=self.num_classes(), dtype=tf.int64),
+                            name='ground_truth', trainable=False)
+        return image, label
 
     def num_examples_per_epoch(self):
         # Bounding box data consists of 615299 bounding boxes for 544546 images.
@@ -55,18 +65,15 @@ class ImagenetModel(NeuralNetworkModel):
             self.image_size = 224  # side of the square image
             self.channels = 3
             self.n_input = self.image_size * self.image_size * self.channels
-
-            self.images = tf.placeholder(tf.float32, [None, self.image_size, self.image_size, self.channels])
+            self.dataset = Imagenet('train', synthesized=self.use_synthesized_data)
 
             # add queue runners (evaluation dequeues records)
-            self.dataset = Imagenet('train')
-            self.batch_images_queue, self.batch_labels_queue = distorted_inputs(
-                self.dataset, batch_size=self.batch_size)
+            self.images, self._labels = distorted_inputs(self.dataset, batch_size=self.batch_size)
 
     def build_labels(self):
         with self.G.as_default():
             self.n_classes = 1000 + 1  # background class
-            self._labels = tf.placeholder(tf.int64, [None])
+            # self._labels already set in build_inputs
 
     def build_evaluation(self):
         """Evaluation metrics (e.g., accuracy)."""
@@ -97,7 +104,6 @@ class ImagenetModel(NeuralNetworkModel):
             opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
             # Compute and apply gradients.
-            #self.train_op = opt.minimize(total_loss, aggregation_method=tf.AggregationMethod.EXPERIMENTAL_ACCUMULATE_N)
             self.train_op = opt.minimize(total_loss)
 
         return self.train_op
@@ -116,27 +122,16 @@ class ImagenetModel(NeuralNetworkModel):
                 if step > n_steps:
                     return
 
-                # TODO: switch to test
-                batch_images, batch_labels = self.session.run([self.batch_images_queue, self.batch_labels_queue])
-
-                print("Queued ImageNet batch.")
-
                 if not self.forward_only:
-                    _, loss_value, acc = runstep(
-                        self.session,
-                        [self.train, self.loss, self.accuracy],
-                        feed_dict={self.images: batch_images, self._labels: batch_labels, self.keep_prob: self.dropout},
-                    )
+                    _, loss_value, acc = runstep(self.session, [self.train, self.loss, self.accuracy],
+                                                 feed_dict={self.keep_prob: self.dropout})
 
                     if step % self.display_step == 0:
                         print("Iter " + str(step*self.batch_size) + ", Minibatch Loss= " +
                               "{:.6f}".format(loss_value) + ", Training Accuracy= " + "{:.5f}".format(acc))
                 else:
-                    _ = runstep(
-                        self.session,
-                        self.outputs,
-                        feed_dict={self.images: batch_images, self._labels: batch_labels, self.keep_prob: 1.},
-                    )
+                    # TODO: switch to test subset dataset
+                    runstep(self.session, self.outputs, feed_dict={self.keep_prob: 1.})
 
                 step += 1
 

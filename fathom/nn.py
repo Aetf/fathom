@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from __future__ import absolute_import, print_function, division
 from future.utils import with_metaclass
 
@@ -35,6 +34,7 @@ def default_runstep(session, sink_ops, *options, **kw_options):
 
 class NeuralNetworkModel(with_metaclass(ABCMeta, GenericModel)):
     forward_only = False
+    use_synthesized_data = True
 
     def __init__(self, device=None, init_options=None):
         super(NeuralNetworkModel, self).__init__(device=device, init_options=init_options)

@@ -9,6 +9,7 @@ import librosa
 import sklearn.preprocessing
 import h5py
 import logging
+from tqdm import tqdm
 
 import os
 import fnmatch
@@ -63,12 +64,12 @@ def mfcc_features(filename):
 
     frame_length_seconds = 0.010
     frame_overlap_seconds = 0.005
+    length = int(frame_overlap_seconds * sr)
 
-    mfccs = librosa.feature.mfcc(d, sr, n_mfcc=1+12, n_fft=int(frame_overlap_seconds*sr),
-                                 hop_length=int(frame_overlap_seconds*sr))
+    mfccs = librosa.feature.mfcc(d, sr, n_mfcc=1+12, n_fft=length, hop_length=length)
 
     # energy (TODO: log?)
-    energy = librosa.feature.rmse(d, n_fft=int(frame_overlap_seconds*sr), hop_length=int(frame_overlap_seconds*sr))
+    energy = librosa.feature.rmse(d, frame_length=length, hop_length=length)
 
     mfccs[0] = energy  # replace first MFCC with energy, per convention
 
@@ -87,7 +88,7 @@ def dirpath2dataset(dirpath):
 
     e.g., TIMIT/TRAIN/DR8/MMPM0/SX251.WAV => MMPM0/SX251.WAV
     """
-    if not '/' in dirpath:
+    if '/' not in dirpath:
         raise Exception("not a valid TIMIT dirpath")
 
     dataset_name = '/'.join(dirpath.split('/')[-2:])
@@ -139,22 +140,25 @@ def load_precomputed_spectrograms(filepath):
     return features_list
 
 
-def load_timit(filepath, train=True):
+def load_timit(filepath, train=True, n_context=3):
     # TODO: load test also
     with h5py.File(filepath, 'r') as hf:
         train_spectrograms = np.array(hf['timit']['train']['spectrograms'])
         train_labels = np.array(hf['timit']['train']['labels'])
         train_seq_lens = np.array(hf['timit']['train']['seq_lens'])
+        train_frame_lens = np.array(hf['timit']['train']['frame_lens'])
 
-        return train_spectrograms, train_labels, train_seq_lens
+        return train_spectrograms, train_frame_lens, train_labels, train_seq_lens
 
 
-def save_feature_dataset(audio_filenames, spectrograms, seq_lens, phoneme2index_list, labels, filepath, overwrite=False):
+def save_feature_dataset(audio_filenames, frame_lens, spectrograms, seq_lens, phoneme2index_list, labels, filepath,
+                         overwrite=False):
     """Save computed features for TIMIT.
 
     Args:
     - maps from subset kinds 'train' and 'test' to corresponding data:
       - audio_filenames: list of basepaths to TIMIT examples
+      - frame_lens: number of frames in each example (<= max_frames)
       - spectrograms: np.array((n_examples, max_frames, n_coeffs))
         - n_examples: number of TIMIT examples (e.g., train=4206)
         - max_frames: the most frames in any example
@@ -183,6 +187,9 @@ def save_feature_dataset(audio_filenames, spectrograms, seq_lens, phoneme2index_
         for subset_kind, subset_dataset in [(train_name, train), (test_name, test)]:
             # (n_examples,)
             subset_dataset.create_dataset('example_paths', dtype="S100", data=np.array(audio_filenames[subset_kind]))
+
+            # (n_examples,)
+            subset_dataset.create_dataset('frame_lens', data=frame_lens[subset_kind])
 
             # (n_examples, max_frames, n_coeffs)
             subset_dataset.create_dataset('spectrograms', data=spectrograms[subset_kind])
@@ -219,12 +226,14 @@ def index_labels(phoneme2index_dict, timit_transcriptions, max_labels):
 def build_spectrogram_array(features_list, n_examples, max_frames, n_coeffs):
     """Convert list of ragged spectrograms to np.array with list of lens."""
     spectrograms = np.empty((n_examples, max_frames, n_coeffs))
+    frame_lens = np.empty((n_examples,))
 
     for i, feature_vector in enumerate(features_list):
         example_frames = feature_vector.shape[1]
         spectrograms[i, :example_frames, :] = feature_vector.T
+        frame_lens[i] = len(feature_vector.T)
 
-    return spectrograms
+    return spectrograms, frame_lens
 
 
 def load_transcriptions(audio_filenames):
@@ -257,6 +266,7 @@ if __name__ == "__main__":
     logger.info("Walking TIMIT data directory...")
 
     audio_filenames = {}
+    frame_lens = {}
     spectrograms = {}
     seq_lens = {}
     labels = {}
@@ -288,10 +298,12 @@ if __name__ == "__main__":
         subset_labels, subset_seq_lens = index_labels(phoneme2index_dict, subset_transcriptions, max_labels)
 
         logger.info("Building spectrogram array for {}...".format(subset_kind))
-        subset_spectrograms = build_spectrogram_array(subset_features_list, n_examples, max_frames, n_coeffs)
+        subset_spectrograms, subset_frame_lens = build_spectrogram_array(
+            subset_features_list, n_examples, max_frames, n_coeffs)
 
         # store for later saving
         audio_filenames[subset_kind] = subset_audio_filenames
+        frame_lens[subset_kind] = subset_frame_lens
         spectrograms[subset_kind] = subset_spectrograms
         labels[subset_kind] = subset_labels
         seq_lens[subset_kind] = subset_seq_lens
@@ -299,7 +311,7 @@ if __name__ == "__main__":
         logger.info("Finished preprocessing {}.".format(subset_kind))
 
     logger.info("Saving HDF5 train/test dataset...")
-    save_feature_dataset(audio_filenames, spectrograms, seq_lens,
+    save_feature_dataset(audio_filenames, frame_lens, spectrograms, seq_lens,
                          phoneme2index_list, labels, filepath=timit_hdf5_filepath)
 
     logger.info("Finished.")

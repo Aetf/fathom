@@ -32,6 +32,14 @@ def default_runstep(session, sink_ops, *options, **kw_options):
     return session.run(sink_ops, *options, **kw_options)
 
 
+def get_variable(name, shape, initializer):
+    r'''Create a variable in CPU memory.'''
+    with tf.device('/cpu:0'):
+        # Create or get apropos variable
+        var = tf.get_variable(name=name, shape=shape, initializer=initializer)
+    return var
+
+
 class NeuralNetworkModel(with_metaclass(ABCMeta, GenericModel)):
     forward_only = False
     use_synthesized_data = True

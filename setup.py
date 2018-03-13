@@ -16,10 +16,11 @@ setup(name='Fathom-Workloads',  # "fathom" is already taken on PyPI
           'numpy',
           'scipy',
           'scikit-learn',
-          'librosa',  # audio preprocessing
+          'librosa>=0.6.0',  # audio preprocessing
           'h5py',
           'future',  # python 2 & 3 compatibility
           'requests'  # dataset downloading
+          'tqdm'  # TIMIT dataset processing
       ],
 
       # Authors: Robert Adolf, Saketh Rama, and Brandon Reagen

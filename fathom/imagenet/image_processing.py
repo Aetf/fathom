@@ -42,8 +42,6 @@ import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_integer('batch_size', 32,
-                            """Number of images to process in a batch.""")
 tf.app.flags.DEFINE_integer('image_size', 224,
                             """Provide square images of this size.""")
 tf.app.flags.DEFINE_integer('num_preprocess_threads', 4,
@@ -99,7 +97,7 @@ def inputs(dataset, batch_size=None, num_preprocess_threads=None):
     return images, labels
 
 
-def distorted_inputs(dataset, batch_size=None, num_preprocess_threads=None):
+def distorted_inputs(dataset, batch_size, num_preprocess_threads=None):
     """Generate batches of distorted versions of ImageNet images.
 
     Use this function as the inputs for training a network.
@@ -119,9 +117,6 @@ def distorted_inputs(dataset, batch_size=None, num_preprocess_threads=None):
                                          FLAGS.image_size, 3].
       labels: 1-D integer Tensor of [batch_size].
     """
-    if not batch_size:
-        batch_size = FLAGS.batch_size
-
     # Force all input processing onto CPU in order to reserve the GPU for
     # the forward inference and back-propagation.
     with tf.device('/cpu:0'):

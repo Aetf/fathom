@@ -174,7 +174,7 @@ class NeuralNetworkModel(with_metaclass(ABCMeta, GenericModel)):
         with self.G.as_default():
             # Start a new session and initialize the network
             if setup_options is not None:
-                self.session = tf.Session(config=tf.ConfigProto(**setup_options))
+                self.session = tf.Session(**setup_options)
             else:
                 self.session = tf.Session()
             # Start the input data loaders

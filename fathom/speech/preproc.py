@@ -4,15 +4,15 @@ Convert TIMIT audio files into spectral coefficients.
 """
 from __future__ import absolute_import, print_function, division
 
+import os
+import fnmatch
 import numpy as np
 import librosa
 import sklearn.preprocessing
 import h5py
 import logging
 from tqdm import tqdm
-
-import os
-import fnmatch
+from pkg_resources import resource_filename
 
 from .phoneme import timit_phonemes, phoneme2index_list, phoneme2index_dict
 
@@ -140,9 +140,13 @@ def load_precomputed_spectrograms(filepath):
     return features_list
 
 
-def load_timit(train=True, n_context=3):
+def load_timit(train=True, n_context=3, synthesized_data=False):
     # TODO: load test also
-    with h5py.File(timit_hdf5_filepath, 'r') as hf:
+    filepath = timit_hdf5_filepath
+    if synthesized_data:
+        filepath = resource_filename('fathom', 'data/syn_timit.hdf5')
+
+    with h5py.File(filepath, 'r') as hf:
         train_spectrograms = np.array(hf['timit']['train']['spectrograms'])
         train_labels = np.array(hf['timit']['train']['labels'])
         train_seq_lens = np.array(hf['timit']['train']['seq_lens'])

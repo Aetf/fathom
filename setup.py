@@ -57,6 +57,8 @@ setup(name='Fathom-Workloads',  # "fathom" is already taken on PyPI
           'runtest.sh',
 
           'setup.cfg',
+
+          'data/*'
       ]},
       include_package_data=True,
       )

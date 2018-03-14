@@ -236,22 +236,10 @@ class Speech(NeuralNetworkModel):
 
     def load_data(self):
         # TODO: load test
-        if not self.use_synthesized_data:
-            print('Using real data')
-            (self.train_spectrograms, self.train_frame_lens,
-             self.train_labels, self.train_seq_lens) = load_timit(train=True, n_context=self.n_context)
-        else:
-            print('Using fake data')
-            # generate a few synthesized examples
-            n_examples = 10
-            max_frames = 1566
-            max_labels = 75
-            self.train_spectrograms = np.random.random([n_examples, max_frames, self._n_inputs])
-            self.train_frame_lens = np.random.randint(max_frames, size=[n_examples], dtype=np.int32)
-            # self.n_labels includes blank class, but when generating, we shouldn't include that.
-            self.train_labels = np.random.randint(0, self.n_labels - 1, size=[n_examples, max_labels],
-                                                  dtype=np.int32)
-            self.train_seq_lens = np.random.randint(max_labels, size=[n_examples], dtype=np.int32)
+        print('Using fake data: {}'.format(self.use_synthesized_data))
+        (self.train_spectrograms, self.train_frame_lens,
+         self.train_labels, self.train_seq_lens) = load_timit(train=True, n_context=self.n_context,
+                                                              synthesized_data=self.use_synthesized_data)
 
     def get_random_batch(self):
         """Get random batch from np.arrays (not tf.train.shuffle_batch)."""

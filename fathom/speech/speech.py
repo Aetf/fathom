@@ -7,7 +7,7 @@ import tensorflow as tf
 
 from fathom.nn import NeuralNetworkModel, default_runstep, get_variable
 
-from .preproc import load_timit, timit_hdf5_filepath
+from .preproc import load_timit
 from .phoneme import index2phoneme_dict
 
 
@@ -26,8 +26,6 @@ class Speech(NeuralNetworkModel):
 
     def build_hyperparameters(self):
         self.n_labels = 61 + 1  # add blank
-        self.max_frames = 1566  # TODO: compute dynamically
-        self.max_labels = 75
 
         self.n_coeffs = 26
         self.n_context = 0  # TODO: enable n_context = 3 in preproc.py
@@ -40,8 +38,8 @@ class Speech(NeuralNetworkModel):
 
     def build_inputs(self):
         with self.G.as_default():
-            # of shape [batch_size, max_frames, n_coeffs + 2 * n_coeffs * n_context]
-            self._inputs = tf.placeholder(tf.float32, [None, self.max_frames, self._n_inputs], name="inputs")
+            # of shape [batch_size, <=max_frames, n_coeffs + 2 * n_coeffs * n_context]
+            self._inputs = tf.placeholder(tf.float32, [None, None, self._n_inputs], name="inputs")
             self.frame_lens = tf.placeholder(tf.int32, [None], name="frame_lens")
 
     @property
@@ -50,8 +48,8 @@ class Speech(NeuralNetworkModel):
 
     def build_labels(self):
         with self.G.as_default():
-            # of shape [batch_size, max_labels]
-            self._labels = tf.placeholder(tf.int32, [None, self.max_labels], name="labels")
+            # of shape [batch_size, <=max_labels]
+            self._labels = tf.placeholder(tf.int32, [None, None], name="labels")
             self.seq_lens = tf.placeholder(tf.int32, [None], name="seq_lens")
 
     @property
@@ -239,17 +237,21 @@ class Speech(NeuralNetworkModel):
     def load_data(self):
         # TODO: load test
         if not self.use_synthesized_data:
-            self.train_spectrograms, self.train_frame_lens, self.train_labels, self.train_seq_lens = load_timit(
-                timit_hdf5_filepath, train=True, synthesized=self.use_synthesized_data)
+            print('Using real data')
+            (self.train_spectrograms, self.train_frame_lens,
+             self.train_labels, self.train_seq_lens) = load_timit(train=True, n_context=self.n_context)
         else:
+            print('Using fake data')
             # generate a few synthesized examples
             n_examples = 10
-            self.train_spectrograms = np.random.random([n_examples, self.max_frames, self._n_inputs])
-            self.train_frame_lens = np.random.randint(self.max_frames, size=[n_examples], dtype=np.int32)
+            max_frames = 1566
+            max_labels = 75
+            self.train_spectrograms = np.random.random([n_examples, max_frames, self._n_inputs])
+            self.train_frame_lens = np.random.randint(max_frames, size=[n_examples], dtype=np.int32)
             # self.n_labels includes blank class, but when generating, we shouldn't include that.
-            self.train_labels = np.random.randint(0, self.n_labels - 1, size=[n_examples, self.max_labels],
+            self.train_labels = np.random.randint(0, self.n_labels - 1, size=[n_examples, max_labels],
                                                   dtype=np.int32)
-            self.train_seq_lens = np.random.randint(self.max_labels, size=[n_examples], dtype=np.int32)
+            self.train_seq_lens = np.random.randint(max_labels, size=[n_examples], dtype=np.int32)
 
     def get_random_batch(self):
         """Get random batch from np.arrays (not tf.train.shuffle_batch)."""
@@ -270,6 +272,7 @@ class Speech(NeuralNetworkModel):
             for current_iter in range(n_steps):
                 spectrogram_batch, frame_len_batch, label_batch, seq_len_batch = self.get_random_batch()
 
+                print('Iteration {}'.format(current_iter))
                 feeds = {
                     self.inputs: spectrogram_batch,
                     self.frame_lens: frame_len_batch,
@@ -281,8 +284,8 @@ class Speech(NeuralNetworkModel):
                 else:
                     # run forward-only on train batch
                     runstep(self.session, self.outputs, feed_dict=feeds)
+                print('Iteration {} Finished'.format(current_iter))
 
-                print('Iteration {}'.format(current_iter))
                 # print some decoded examples
                 if False:
                     # decode the same batch, for debugging

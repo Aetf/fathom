@@ -62,7 +62,7 @@ def mfcc_features(filename):
     """
     d, sr = librosa.load(filename)
 
-    frame_length_seconds = 0.010
+    # frame_length_seconds = 0.010
     frame_overlap_seconds = 0.005
     length = int(frame_overlap_seconds * sr)
 
@@ -140,9 +140,9 @@ def load_precomputed_spectrograms(filepath):
     return features_list
 
 
-def load_timit(filepath, train=True, n_context=3):
+def load_timit(train=True, n_context=3):
     # TODO: load test also
-    with h5py.File(filepath, 'r') as hf:
+    with h5py.File(timit_hdf5_filepath, 'r') as hf:
         train_spectrograms = np.array(hf['timit']['train']['spectrograms'])
         train_labels = np.array(hf['timit']['train']['labels'])
         train_seq_lens = np.array(hf['timit']['train']['seq_lens'])
@@ -186,7 +186,7 @@ def save_feature_dataset(audio_filenames, frame_lens, spectrograms, seq_lens, ph
 
         for subset_kind, subset_dataset in [(train_name, train), (test_name, test)]:
             # (n_examples,)
-            subset_dataset.create_dataset('example_paths', dtype="S100", data=np.array(audio_filenames[subset_kind]))
+            # subset_dataset.create_dataset('example_paths', dtype="S100", data=np.array(audio_filenames[subset_kind]))
 
             # (n_examples,)
             subset_dataset.create_dataset('frame_lens', data=frame_lens[subset_kind])
@@ -211,7 +211,7 @@ def save_feature_dataset(audio_filenames, frame_lens, spectrograms, seq_lens, ph
                 label_dataset.attrs[str(index)] = phoneme
 
 
-def index_labels(phoneme2index_dict, timit_transcriptions, max_labels):
+def index_labels(phoneme2index_dict, timit_transcriptions, n_examples, max_labels):
     """Convert TIMIT transcriptions to integer np.array of indices."""
     labels = np.empty((n_examples, max_labels))
     seq_lens = np.empty((n_examples,))
@@ -261,7 +261,7 @@ def phoneme_set(transcriptions):
     return transcription_phonemes
 
 
-if __name__ == "__main__":
+def main():
     logger.info("Starting to preprocess TIMIT audio data.")
     logger.info("Walking TIMIT data directory...")
 
@@ -283,7 +283,7 @@ if __name__ == "__main__":
         subset_features_list = []
         if load_features:
             logger.info("Loading precomputed spectrograms for {}...".format(subset_kind))
-            features_list = load_precomputed_spectrograms(filepath='/data/speech/timit/mfcc-timit.hdf5')
+            subset_features_list = load_precomputed_spectrograms(filepath='/data/speech/timit/mfcc-timit.hdf5')
         else:
             logger.info("Computing spectrograms for {}...".format(subset_kind))
             subset_features_list = compute_spectrograms(subset_audio_filenames)
@@ -295,7 +295,7 @@ if __name__ == "__main__":
         max_labels = max(len(transcription) for transcription in subset_transcriptions)
 
         logger.info("Building label array by indexing labels from transcriptions for {}...".format(subset_kind))
-        subset_labels, subset_seq_lens = index_labels(phoneme2index_dict, subset_transcriptions, max_labels)
+        subset_labels, subset_seq_lens = index_labels(phoneme2index_dict, subset_transcriptions, n_examples, max_labels)
 
         logger.info("Building spectrogram array for {}...".format(subset_kind))
         subset_spectrograms, subset_frame_lens = build_spectrogram_array(

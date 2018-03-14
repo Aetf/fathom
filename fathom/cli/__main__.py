@@ -1,7 +1,5 @@
 from __future__ import absolute_import, print_function, division
 
-import importlib
-
 import tensorflow as tf
 
 from . import _define_workload, _metadata
@@ -23,48 +21,37 @@ tf.app.flags.DEFINE_enum("action", "train", ["train", "test", "prepare"], "Actio
 tf.app.flags.DEFINE_string("target", "", "Session target")
 tf.app.flags.DEFINE_integer("batch_size", None, "Batch size to use", lower_bound=1)
 tf.app.flags.DEFINE_integer("num_iters", 20, "Iterations to run", lower_bound=1)
+tf.app.flags.DEFINE_boolean("syn_data", True, "Wether to use synthesized data")
 FLAGS = tf.app.flags.FLAGS
 
 
-def _load_creator(classname):
-    try:
-        return importlib.import_module(classname)
-    except ImportError as ex:
-        print("Class not found: ", classname)
-        raise tf.app.UsageError()
+def build_options(**kwargs):
+    return {k: v for k, v in kwargs.items() if v is not None}
 
 
 def _run_class(creator):
-    init_options = {
-        'batch_size': FLAGS.batch_size
-    }
-    setup_options = {
-        'target': FLAGS.target
-    }
+    init_options = build_options(batch_size=FLAGS.batch_size, use_synthesized_data=FLAGS.syn_data)
+    setup_options = build_options(target=FLAGS.target)
 
     m = None
     try:
         m = creator(init_options=init_options)
         m.setup(setup_options=setup_options)
         m.run(runstep=default_runstep, n_steps=FLAGS.num_iters)
-    except Exception as ex:
-        print('Error when running: ', ex)
     finally:
         if m is not None:
             m.teardown()
 
 
-def _default_train(classname):
-    workload = _load_creator(classname)
-    _run_class(workload)
+def _default_train(meta):
+    _run_class(meta.get_creator())
 
 
-def _default_test(classname):
-    workload = _load_creator(classname + 'Fwd')
-    _run_class(workload)
+def _default_test(meta):
+    _run_class(meta.get_creator(meta.name + 'Fwd'))
 
 
-def _default_prepare(classname):
+def _default_prepare(meta):
     pass
 
 
@@ -76,7 +63,7 @@ def main(argv):
         'test': _default_test,
         'prepare': _default_prepare,
     }
-    action = meta['actions'].get(FLAGS.action, default_actions[FLAGS.action])
+    action = meta.actions.get(FLAGS.action, default_actions[FLAGS.action])
     if action is None:
         return
 

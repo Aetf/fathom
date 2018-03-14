@@ -1,6 +1,9 @@
 from __future__ import absolute_import, print_function, division
 
+from datetime import datetime
+from timeit import default_timer
 import tensorflow as tf
+import numpy as np
 
 from fathom.nn import NeuralNetworkModel, default_runstep
 from fathom.dataset import Dataset
@@ -83,7 +86,6 @@ class ImagenetModel(NeuralNetworkModel):
     def build_hyperparameters(self):
         with self.G.as_default():
             self.learning_rate = 0.001
-            self.training_iters = 200000
             self.batch_size = 64
             self.display_step = 1
 
@@ -117,22 +119,23 @@ class ImagenetModel(NeuralNetworkModel):
 
         with self.G.as_default():
             # Keep training until reach max iterations
-            step = 1
-            while step * self.batch_size < self.training_iters:
-                if step > n_steps:
-                    return
-
+            step_train_times = []
+            for step in range(n_steps):
+                start_time = default_timer()
+                lossval = 0
                 if not self.forward_only:
-                    _, loss_value, acc = runstep(self.session, [self.train, self.loss, self.accuracy],
-                                                 feed_dict={self.keep_prob: self.dropout})
-
-                    if step % self.display_step == 0:
-                        print("Iter " + str(step*self.batch_size) + ", Minibatch Loss= " +
-                              "{:.6f}".format(loss_value) + ", Training Accuracy= " + "{:.5f}".format(acc))
+                    _, lossval, acc = runstep(self.session, [self.train, self.loss, self.accuracy],
+                                              feed_dict={self.keep_prob: self.dropout})
                 else:
                     # TODO: switch to test subset dataset
                     runstep(self.session, self.outputs, feed_dict={self.keep_prob: 1.})
 
-                step += 1
+                train_time = default_timer() - start_time
+                step_train_times.append(train_time)
+                if step % self.display_step == 0:
+                    print('{}: Step {}, loss={:.2f} ({:.1f} examples/sec; {:.3f} sec/batch)'.format(
+                          datetime.now(), step, lossval, self.batch_size / train_time, train_time))
 
-            # print "Testing Accuracy:", runstep(self.session, [self.accuracy], feed_dict={self.images: self.mnist.test.images[:256], self._labels: self.mnist.test.labels[:256], self.keep_prob: 1.})
+            print('Average: {:.3f} sec/batch'.format(np.mean(step_train_times)))
+            print('First iteration: {:.3f} sec/batch'.format(step_train_times[0]))
+            print('Average excluding first iteration: {:.3f} sec/batch'.format(np.mean(step_train_times[1:])))

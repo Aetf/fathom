@@ -2,6 +2,9 @@
 from __future__ import absolute_import, print_function, division
 from builtins import range
 
+from datetime import datetime
+from timeit import default_timer
+
 import numpy as np
 import tensorflow as tf
 
@@ -256,23 +259,30 @@ class Speech(NeuralNetworkModel):
         self.load_data()
 
         with self.G.as_default():
-            print('Starting run...')
-            for current_iter in range(n_steps):
-                spectrogram_batch, frame_len_batch, label_batch, seq_len_batch = self.get_random_batch()
+            step_train_times = []
+            for step in range(n_steps):
+                print('Iteration {}'.format(step))
+                start_time = default_timer()
 
-                print('Iteration {}'.format(current_iter))
+                spectrogram_batch, frame_len_batch, label_batch, seq_len_batch = self.get_random_batch()
                 feeds = {
                     self.inputs: spectrogram_batch,
                     self.frame_lens: frame_len_batch,
                     self.labels: label_batch,
                     self.seq_lens: seq_len_batch
                 }
+                lossval = 0
                 if not self.forward_only:
-                    runstep(self.session, [self.train_op, self.loss_op], feed_dict=feeds)
+                    _, lossval = runstep(self.session, [self.train_op, self.loss_op], feed_dict=feeds)
+                    lossval = lossval.mean()
                 else:
                     # run forward-only on train batch
                     runstep(self.session, self.outputs, feed_dict=feeds)
-                print('Iteration {} Finished'.format(current_iter))
+
+                train_time = default_timer() - start_time
+                step_train_times.append(train_time)
+                print('{}: Step {}, loss={:.2f} ({:.1f} examples/sec; {:.3f} sec/batch)'.format(
+                    datetime.now(), step, lossval, self.batch_size / train_time, train_time))
 
                 # print some decoded examples
                 if False:
@@ -281,6 +291,10 @@ class Speech(NeuralNetworkModel):
                     print(' '.join(self.labels2phonemes(decoded[0])))
                     # TODO: fix dtypes in dataset (labels are accidentally floats right now)
                     print(' '.join(self.labels2phonemes(np.array(label_batch[0, :], dtype=np.int32))))
+
+            print('Average: {:.3f} sec/batch'.format(np.mean(step_train_times)))
+            print('First iteration: {:.3f} sec/batch'.format(step_train_times[0]))
+            print('Average excluding first iteration: {:.3f} sec/batch'.format(np.mean(step_train_times[1:])))
 
     def labels2phonemes(self, decoded_labels):
         """Convert a list of label indices to a list of corresponding phonemes."""

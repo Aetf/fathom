@@ -4,14 +4,29 @@ from builtins import range
 
 from datetime import datetime
 from timeit import default_timer
-
+from pkg_resources import resource_filename
 import numpy as np
 import tensorflow as tf
+import h5py
 
-from fathom.nn import NeuralNetworkModel, default_runstep, get_variable
-
-from .preproc import load_timit
+from ..nn import NeuralNetworkModel, default_runstep, get_variable
 from .phoneme import index2phoneme_dict
+
+
+def load_timit(train=True, n_context=3, synthesized_data=False):
+    # NOTE: avoid dependency on preproc
+    filepath = '/data/speech/timit/timit.hdf5'
+    if synthesized_data:
+        filepath = resource_filename('fathom', 'data/syn_timit.hdf5')
+
+    # TODO: load test also
+    with h5py.File(filepath, 'r') as hf:
+        train_spectrograms = np.array(hf['timit']['train']['spectrograms'])
+        train_labels = np.array(hf['timit']['train']['labels'])
+        train_seq_lens = np.array(hf['timit']['train']['seq_lens'])
+        train_frame_lens = np.array(hf['timit']['train']['frame_lens'])
+
+        return train_spectrograms, train_frame_lens, train_labels, train_seq_lens
 
 
 def clipped_relu(inputs, clip=20):

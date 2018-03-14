@@ -12,7 +12,6 @@ import sklearn.preprocessing
 import h5py
 import logging
 from tqdm import tqdm
-from pkg_resources import resource_filename
 
 from .phoneme import timit_phonemes, phoneme2index_list, phoneme2index_dict
 
@@ -138,21 +137,6 @@ def load_precomputed_spectrograms(filepath):
                 features_list.append(data)
 
     return features_list
-
-
-def load_timit(train=True, n_context=3, synthesized_data=False):
-    # TODO: load test also
-    filepath = timit_hdf5_filepath
-    if synthesized_data:
-        filepath = resource_filename('fathom', 'data/syn_timit.hdf5')
-
-    with h5py.File(filepath, 'r') as hf:
-        train_spectrograms = np.array(hf['timit']['train']['spectrograms'])
-        train_labels = np.array(hf['timit']['train']['labels'])
-        train_seq_lens = np.array(hf['timit']['train']['seq_lens'])
-        train_frame_lens = np.array(hf['timit']['train']['frame_lens'])
-
-        return train_spectrograms, train_frame_lens, train_labels, train_seq_lens
 
 
 def save_feature_dataset(audio_filenames, frame_lens, spectrograms, seq_lens, phoneme2index_list, labels, filepath,

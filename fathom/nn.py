@@ -49,11 +49,12 @@ class NeuralNetworkModel(with_metaclass(ABCMeta, GenericModel)):
 
         self.G = tf.Graph()
         self.session = None
+        self.coord = None
+        self.threads = []
 
         # e.g., for batch_size
         self.init_options = init_options
         if self.init_options:
-            print('init_options: ', init_options)
             self.use_synthesized_data = self.init_options.get('use_synthesized_data', self.use_synthesized_data)
 
         with self.G.device(device):
@@ -188,8 +189,9 @@ class NeuralNetworkModel(with_metaclass(ABCMeta, GenericModel)):
 
     def teardown(self):
         """Close session and join queue runners."""
-        self.coord.request_stop()
-        self.coord.join(self.threads, stop_grace_period_secs=10)
+        if self.coord is not None:
+            self.coord.request_stop()
+            self.coord.join(self.threads, stop_grace_period_secs=10)
         if self.session is not None:
             self.session.close()
             self.session = None

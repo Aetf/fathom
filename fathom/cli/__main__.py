@@ -11,7 +11,7 @@ _define_workload('DeepQ')
 _define_workload('AlexNet')
 _define_workload('VGG')
 _define_workload('Residual')
-_define_workload('Autoenc')
+_define_workload('AutoencBase')
 _define_workload('MemNet')
 _define_workload('Seq2Seq')
 _define_workload('Speech', act_prepare=prepare_speech)
@@ -19,6 +19,7 @@ _define_workload('Speech', act_prepare=prepare_speech)
 tf.app.flags.DEFINE_enum("workload", None, _metadata.keys(), "Workload to run")
 tf.app.flags.DEFINE_enum("action", "train", ["train", "test", "prepare"], "Action")
 tf.app.flags.DEFINE_string("target", "", "Session target")
+tf.app.flags.DEFINE_string("dev", "", "Device to run on")
 tf.app.flags.DEFINE_integer("batch_size", None, "Batch size to use", lower_bound=1)
 tf.app.flags.DEFINE_integer("num_iters", 20, "Iterations to run", lower_bound=1)
 tf.app.flags.DEFINE_boolean("syn_data", True, "Wether to use synthesized data")
@@ -31,11 +32,11 @@ def build_options(**kwargs):
 
 def _run_class(creator):
     init_options = build_options(batch_size=FLAGS.batch_size, use_synthesized_data=FLAGS.syn_data)
-    setup_options = build_options(target=FLAGS.target)
+    setup_options = build_options(target=FLAGS.target, config=tf.ConfigProto(allow_soft_placement=True))
 
     m = None
     try:
-        m = creator(init_options=init_options)
+        m = creator(device=FLAGS.dev, init_options=init_options)
         m.setup(setup_options=setup_options)
         m.run(runstep=default_runstep, n_steps=FLAGS.num_iters)
     finally:

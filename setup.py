@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 # The hyphens in release candidates (RCs) will automatically be normalized.
 # But we normalize below manually anyway.
-_VERSION = '1.0-rc0'
+_VERSION = '1.0'
 
 
 setup(name='Fathom-Workloads',  # "fathom" is already taken on PyPI
@@ -16,20 +16,22 @@ setup(name='Fathom-Workloads',  # "fathom" is already taken on PyPI
           'numpy',
           'scipy',
           'scikit-learn',
-          'librosa>=0.6.0',  # audio preprocessing
-          'h5py',
+          'h5py',  # data for speech
           'future',  # python 2 & 3 compatibility
           'requests',  # dataset downloading
-          'tqdm',  # TIMIT dataset processing
       ],
+
+      extras_require={
+          'PrepSpeechData': [
+            'librosa>=0.6.0',  # audio preprocessing
+            'tqdm',  # TIMIT dataset processing
+          ]
+      },
 
       # Authors: Robert Adolf, Saketh Rama, and Brandon Reagen
       # PyPI does not have an easy way to specify multiple authors.
       author="Saketh Rama",
       author_email="rama@seas.harvard.edu",
-
-      # We don't use __file__, but mark False to be safe.
-      zip_safe=False,
 
       classifiers=[
           'Development Status :: 4 - Beta',

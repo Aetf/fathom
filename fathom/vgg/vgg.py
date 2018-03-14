@@ -100,7 +100,6 @@ def conv_op(input_op, name, kw, kh, n_out, dw, dh):
         conv = tf.nn.conv2d(input_op, kernel, (1, dh, dw, 1), padding='SAME')
         bias_init_val = tf.constant(0.0, shape=[n_out], dtype=tf.float32)
         biases = tf.Variable(bias_init_val, trainable=True, name='b')
-        z = tf.reshape(tf.nn.bias_add(conv, biases), [n_in] + conv.get_shape().as_list()[1:])
         z = tf.nn.bias_add(conv, biases)
         activation = tf.nn.relu(z, name=scope)
         return activation

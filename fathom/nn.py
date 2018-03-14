@@ -52,6 +52,9 @@ class NeuralNetworkModel(with_metaclass(ABCMeta, GenericModel)):
 
         # e.g., for batch_size
         self.init_options = init_options
+        if self.init_options:
+            print('init_options: ', init_options)
+            self.use_synthesized_data = self.init_options.get('use_synthesized_data', self.use_synthesized_data)
 
         with self.G.device(device):
             with self.G.as_default():

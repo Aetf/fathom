@@ -35,13 +35,19 @@ def _run_class(creator):
     setup_options = build_options(target=FLAGS.target, config=tf.ConfigProto(allow_soft_placement=True))
 
     m = None
-    try:
-        m = creator(device=FLAGS.dev, init_options=init_options)
-        m.setup(setup_options=setup_options)
-        m.run(runstep=default_runstep, n_steps=FLAGS.num_iters)
-    finally:
-        if m is not None:
-            m.teardown()
+    retry = True
+    while retry:
+        try:
+            m = creator(device=FLAGS.dev, init_options=init_options)
+            m.setup(setup_options=setup_options)
+            m.run(runstep=default_runstep, n_steps=FLAGS.num_iters)
+            retry = False
+        except tf.errors.UnavailableError as ex:
+            time.sleep(1)
+            eprint("Retry due to error: ", ex)
+        finally:
+            if m is not None:
+                m.teardown()
 
 
 def _default_train(meta):

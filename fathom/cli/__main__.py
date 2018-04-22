@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 import tensorflow as tf
+from timeit import default_timer
 
 from . import _define_workload, _metadata
 from .wrappers import prepare_speech
@@ -34,6 +35,7 @@ def _run_class(creator):
     init_options = build_options(batch_size=FLAGS.batch_size, use_synthesized_data=FLAGS.syn_data)
     setup_options = build_options(target=FLAGS.target, config=tf.ConfigProto(allow_soft_placement=True))
 
+    st = default_timer()
     m = None
     try:
         m = creator(device=FLAGS.dev, init_options=init_options)
@@ -42,6 +44,9 @@ def _run_class(creator):
     finally:
         if m is not None:
             m.teardown()
+
+    jct = default_timer() - st
+    print("JCT: {}s".format(jct))
 
 
 def _default_train(meta):

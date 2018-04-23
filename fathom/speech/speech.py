@@ -288,7 +288,7 @@ class Speech(NeuralNetworkModel):
                 }
                 lossval = 0
                 if not self.forward_only:
-                    _, lossval = runstep(self.session, [self.train_op, self.loss_op], feed_dict=feeds)
+                    _, lossval, _ = runstep(self.session, [self.train_op, self.loss_op, tf.random_normal([1], name="salus_main_iter")], feed_dict=feeds)
                     lossval = lossval.mean()
                 else:
                     # run forward-only on train batch

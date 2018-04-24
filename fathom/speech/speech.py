@@ -275,6 +275,7 @@ class Speech(NeuralNetworkModel):
 
         with self.G.as_default():
             step_train_times = []
+            salus_marker = tf.no_op(name="salus_main_iter")
             for step in range(n_steps):
                 print('Iteration {}'.format(step))
                 start_time = default_timer()
@@ -288,7 +289,7 @@ class Speech(NeuralNetworkModel):
                 }
                 lossval = 0
                 if not self.forward_only:
-                    _, lossval, _ = runstep(self.session, [self.train_op, self.loss_op, tf.random_normal([1], name="salus_main_iter")], feed_dict=feeds)
+                    _, lossval, _ = runstep(self.session, [self.train_op, self.loss_op, salus_marker], feed_dict=feeds)
                     lossval = lossval.mean()
                 else:
                     # run forward-only on train batch

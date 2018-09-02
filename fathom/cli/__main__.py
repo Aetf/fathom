@@ -41,6 +41,7 @@ def _run_class(creator):
     while retry:
         try:
             m = creator(device=FLAGS.dev, init_options=init_options)
+
             m.setup(setup_options=setup_options)
             m.run(runstep=default_runstep, n_steps=FLAGS.num_iters)
             retry = False

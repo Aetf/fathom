@@ -169,6 +169,7 @@ class Speech(NeuralNetworkModel):
 
         with self.G.as_default():
             self.decode_op = self.build_decoding()
+            self.salus_marker = tf.no_op(name="salus_main_iter")
 
     def mlp_layer(self, inputs, n_output, name, weight_initializer=None, activation=clipped_relu):
         with self.G.as_default():
@@ -269,13 +270,30 @@ class Speech(NeuralNetworkModel):
                  self.train_seq_lens[random_sample])
         return batch
 
+    def setup(self, setup_options=None):
+        """Make session and launch queue runners."""
+        config = setup_options.pop('config', tf.ConfigProto())
+        # set memory usage
+        KB = 1024
+        MB = 1024 * KB
+        memusages = {
+            25: (2260 * MB - 500 * MB, 500 * MB),
+            50: (4000 * MB - 500 * MB, 500 * KB),
+            75: (5740 * MB - 500 * MB, 500 * MB),
+        }
+        config.allow_soft_placement = True
+        config.salus_options.resource_map.temporary['MEMORY:GPU'] = memusages[self.batch_size][0]
+        config.salus_options.resource_map.persistant['MEMORY:GPU'] = memusages[self.batch_size][1]
+
+        setup_options['config'] = config
+        super(Speech, self).setup(setup_options=setup_options)
+
     def run(self, runstep=None, n_steps=1, *args, **kwargs):
         print("Loading spectrogram features...")
         self.load_data()
 
         with self.G.as_default():
             step_train_times = []
-            salus_marker = tf.no_op(name="salus_main_iter")
             for step in range(n_steps):
                 print('Iteration {}'.format(step))
                 start_time = default_timer()
@@ -289,7 +307,8 @@ class Speech(NeuralNetworkModel):
                 }
                 lossval = 0
                 if not self.forward_only:
-                    _, lossval, _ = runstep(self.session, [self.train_op, self.loss_op, salus_marker], feed_dict=feeds)
+                    _, lossval, _ = runstep(self.session, [self.train_op, self.loss_op, self.salus_marker],
+                                            feed_dict=feeds)
                     lossval = lossval.mean()
                 else:
                     # run forward-only on train batch

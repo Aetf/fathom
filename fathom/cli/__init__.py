@@ -14,7 +14,7 @@ class Workload(object):
         if name is None:
             name = self.name
 
-        package = 'fathom.' + name.lower()
+        package = 'fathom.' + self.name.lower()
         try:
             pkg = __import__(package, globals(), locals(), [name], 0)
             return getattr(pkg, name)

@@ -273,14 +273,25 @@ class Speech(NeuralNetworkModel):
     def setup(self, setup_options=None):
         """Make session and launch queue runners."""
         config = setup_options.pop('config', tf.ConfigProto())
+        action = setup_options.pop('action', 'train')
+
         # set memory usage
         KB = 1024
         MB = 1024 * KB
-        memusages = {
-            25: (2260 * MB - 500 * MB, 500 * MB),
-            50: (4000 * MB - 500 * MB, 500 * KB),
-            75: (5740 * MB - 500 * MB, 500 * MB),
-        }
+        if action == 'train':
+            memusages = {
+                25: (2260 * MB - 500 * MB, 500 * MB),
+                50: (4000 * MB - 500 * MB, 500 * KB),
+                75: (5740 * MB - 500 * MB, 500 * MB),
+            }
+        elif action == 'test':
+            memusages = {
+                1: (2260 * MB - 500 * MB, 500 * MB),
+                5: (2260 * MB - 500 * MB, 500 * MB),
+                10: (2260 * MB - 500 * MB, 500 * MB),
+            }
+        else:
+            raise ValueError('Unknown action: ' + action)
         config.allow_soft_placement = True
         config.salus_options.resource_map.temporary['MEMORY:GPU'] = memusages[self.batch_size][0]
         config.salus_options.resource_map.persistant['MEMORY:GPU'] = memusages[self.batch_size][1]

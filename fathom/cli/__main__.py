@@ -33,7 +33,9 @@ def build_options(**kwargs):
 
 def _run_class(creator):
     init_options = build_options(batch_size=FLAGS.batch_size, use_synthesized_data=FLAGS.syn_data)
-    setup_options = build_options(target=FLAGS.target, config=tf.ConfigProto(allow_soft_placement=True))
+    setup_options = build_options(target=FLAGS.target,
+                                  config=tf.ConfigProto(allow_soft_placement=True),
+                                  action=FLAGS.action)
 
     st = default_timer()
     m = None

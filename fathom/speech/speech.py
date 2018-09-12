@@ -8,6 +8,9 @@ from pkg_resources import resource_filename
 import numpy as np
 import tensorflow as tf
 import h5py
+import os
+import time
+import random
 
 from ..nn import NeuralNetworkModel, default_runstep, get_variable
 from .phoneme import index2phoneme_dict
@@ -303,6 +306,13 @@ class Speech(NeuralNetworkModel):
         print("Loading spectrogram features...")
         self.load_data()
 
+        eval_interval = os.environ.get('SALUS_TFBENCH_EVAL_INTERVAL', '0.1')
+        eval_rand_factor = os.environ.get('SALUS_TFBENCH_EVAL_RAND_FACTOR', '5')
+        eval_block = os.environ.get('SALUS_TFBENCH_EVAL_BLOCK', 'true')
+
+        if eval_block != 'true':
+            raise ValueError("SALUS_TFBENCH_EVAL_BLOCK=false is not supported")
+
         with self.G.as_default():
             step_train_times = []
             for step in range(n_steps):
@@ -329,6 +339,12 @@ class Speech(NeuralNetworkModel):
                 step_train_times.append(train_time)
                 print('{}: Step {}, loss={:.2f} ({:.1f} examples/sec; {:.3f} sec/batch)'.format(
                     datetime.now(), step, lossval, self.batch_size / train_time, train_time))
+
+                if self.forward_only:
+                    factor = 1
+                    if eval_rand_factor != "1":
+                        factor = random.randint(1, int(eval_rand_factor))
+                        time.sleep(float(eval_interval) * factor)
 
                 # print some decoded examples
                 if False:

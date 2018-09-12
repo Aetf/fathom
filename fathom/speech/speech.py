@@ -286,9 +286,9 @@ class Speech(NeuralNetworkModel):
             }
         elif action == 'test':
             memusages = {
-                1: (2260 * MB - 500 * MB, 500 * MB),
-                5: (2260 * MB - 500 * MB, 500 * MB),
-                10: (2260 * MB - 500 * MB, 500 * MB),
+                1: (145 * MB - 117 * MB, 117 * MB),
+                5: (194 * MB - 500 * MB, 117 * MB),
+                10: (263 * MB - 500 * MB, 117 * MB),
             }
         else:
             raise ValueError('Unknown action: ' + action)

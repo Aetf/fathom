@@ -298,6 +298,8 @@ class Speech(NeuralNetworkModel):
         config.allow_soft_placement = True
         config.salus_options.resource_map.temporary['MEMORY:GPU'] = memusages[self.batch_size][0]
         config.salus_options.resource_map.persistant['MEMORY:GPU'] = memusages[self.batch_size][1]
+        config.salus_options.resource_map.temporary['MEMORY:GPU0'] = memusages[self.batch_size][0]
+        config.salus_options.resource_map.persistant['MEMORY:GPU0'] = memusages[self.batch_size][1]
 
         setup_options['config'] = config
         super(Speech, self).setup(setup_options=setup_options)
